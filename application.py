@@ -118,8 +118,30 @@ def insert_data_into_db(payload):
     """
     create_db_table()
     # TODO: Implement the database call    
-    
-    raise NotImplementedError("Database insert function not implemented.")
+    connection = pymysql.connect(
+        host=os.environ.get("DB_HOST"),
+        user=os.environ.get("DB_USER"),
+        password=os.environ.get("DB_PASSWORD"),
+        database=os.environ.get("DB_NAME"),
+        cursorclass=pymysql.cursors.DictCursor
+    )
+
+    with connection.cursor() as cursor:
+        sql = """
+        INSERT INTO events (title, description, image_url, date, location)
+        VALUES (%s, %s, %s, %s, %s)
+        """
+
+        cursor.execute(sql, (
+            payload["title"],
+            payload["description"],
+            payload["image_url"],
+            payload["date"],
+            payload["location"]
+        ))
+
+    connection.commit()
+    connection.close() 
 
 #Database Function Stub
 def fetch_data_from_db():
@@ -128,8 +150,25 @@ def fetch_data_from_db():
     Implement this function to fetch your data from the database.
     """
     # TODO: Implement the database call
-    
-    raise NotImplementedError("Database fetch function not implemented.")
+    connection = pymysql.connect(
+        host=os.environ.get("DB_HOST"),
+        user=os.environ.get("DB_USER"),
+        password=os.environ.get("DB_PASSWORD"),
+        database=os.environ.get("DB_NAME"),
+        cursorclass=pymysql.cursors.DictCursor
+    )
+
+    with connection.cursor() as cursor:
+        sql = "SELECT * FROM events ORDER BY date ASC"
+        cursor.execute(sql)
+        rows = cursor.fetchall()
+
+        for row in rows:
+            row["date"] = row["date"].strftime("%a, %d %b %Y 00:00:00 GMT")
+
+    connection.close()
+
+    return rows    
 
 if __name__ == '__main__':
     application.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
